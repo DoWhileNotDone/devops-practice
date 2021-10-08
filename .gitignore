@@ -1,0 +1,12 @@
+working
+website_test
+Ex_Files*
+
+.env
+
+docker/volumes
+
+# Local terraform
+**/.terraform/*
+terraform.tfstate*
+.terraform.lock.hcl

@@ -1,0 +1,58 @@
+version: "3.8"
+
+services:
+  aws:
+    image: amazon/aws-cli
+    volumes:
+      - $PWD:/app
+    working_dir: /app 
+    environment: 
+      AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID}
+      AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_KEY} 
+      AWS_REGION: ${AWS_REGION}
+  website:
+    build:
+      context: .
+      dockerfile: ./docker/dockerfiles/website.dockerfile
+    ports:
+      - "80:80"     
+  unittests:
+    volumes:
+      - "$PWD:/app"
+    build:
+      context: .
+      dockerfile: ./docker/dockerfiles/rspec.dockerfile
+    command:
+      - --pattern
+      - /app/spec/${TEST_TYPE}/*_spec.rb
+    environment:
+      SELENIUM_HOST: selenium
+      SELENIUM_PORT: 4444
+      WEBSITE_URL: http://davegthemighty-test.org.s3-website.eu-west-2.amazonaws.com/
+  selenium: 
+    image: selenium/standalone-chrome-debug
+    ports:
+      - 4444:4444
+      - 5901:5900
+  jenkins: 
+    image: devops/jenkins
+    build:
+      context: .
+      dockerfile: ./docker/dockerfiles/jenkins.dockerfile
+    volumes:
+      - $PWD/docker/volumes/jenkins/home:/var/jenkins_home      
+      - $PWD:/app
+    ports:
+      - 8080:8080      
+  terraform:
+    image: terraform
+    build:
+      context: .
+      dockerfile: ./docker/dockerfiles/terraform.dockerfile
+    volumes:
+      - $PWD:/app
+    working_dir: /app   
+    environment: 
+      - AWS_ACCESS_KEY_ID
+      - AWS_SECRET_KEY
+      - AWS_REGION
